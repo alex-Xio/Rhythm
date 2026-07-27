@@ -35,6 +35,8 @@ target_sources(${PROJECT_NAME} PRIVATE
 
 # Add include directories
 target_include_directories(${PROJECT_NAME} PRIVATE
+${CMAKE_CURRENT_SOURCE_DIR}/Inc/CMSIS/Include
+${CMAKE_CURRENT_SOURCE_DIR}/Inc/CMSIS/Device/ST/STM32F4xx/Include
   # User defined include directories
 )
 
