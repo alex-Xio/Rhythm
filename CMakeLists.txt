@@ -29,12 +29,13 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/components.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/files.cmake)
 
 # Add sources to executable/library
-target_sources(${PROJECT_NAME} PRIVATE
-  # User defined sources
+target_sources(Rhythm PRIVATE
+    Src/uart.c
 )
 
 # Add include directories
 target_include_directories(${PROJECT_NAME} PRIVATE
+${CMAKE_CURRENT_SOURCE_DIR}/Inc
 ${CMAKE_CURRENT_SOURCE_DIR}/Inc/CMSIS/Include
 ${CMAKE_CURRENT_SOURCE_DIR}/Inc/CMSIS/Device/ST/STM32F4xx/Include
   # User defined include directories
