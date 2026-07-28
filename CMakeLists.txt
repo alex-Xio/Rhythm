@@ -31,6 +31,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/files.cmake)
 # Add sources to executable/library
 target_sources(Rhythm PRIVATE
     Src/uart.c
+    Src/button.c
 )
 
 # Add include directories
