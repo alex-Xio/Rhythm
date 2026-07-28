@@ -1,9 +1,12 @@
 #include "uart.h"
 #include <stdint.h>
+#include <stdio.h>
 
 int main(void) {
-  uart_open();
+  uart_init();
   while (1) {
-    uart_write();
+    printf("Hello\r\n");
+    for (int i = 0; i < 100000; i++) {
+    }
   };
-};
+}

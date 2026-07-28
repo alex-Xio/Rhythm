@@ -1,15 +1,25 @@
 #include "uart.h"
-#include "stm32f411xe.h"
 #include <stdint.h>
 
-#define USART_BRR_155200 (0x312U)
 #define CR1_UE (1U << 13)
 #define CR1_TE (1U << 3)
 #define CR1_RE (1U << 2)
 #define CR1_M (1U << 12)
 #define SR_TXE (1U << 7)
+#define PERIPH_CLK 16000000
+#define BAUD_RATE 115200
 
-void uart_open(void) {
+static uint16_t compute_uart_bd(uint32_t periph_clk, uint32_t baudrate) {
+  return ((periph_clk + (baudrate / 2U)) / baudrate);
+}
+static void uart_write(int);
+
+int __io_putchar(int ch) {
+  uart_write(ch);
+  return ch;
+}
+
+void uart_init(void) {
 
   RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN_Msk;
 
@@ -35,15 +45,15 @@ void uart_open(void) {
 
   USART2->CR1 &= ~CR1_M;
 
-  USART2->BRR |= USART_BRR_155200;
+  USART2->BRR = compute_uart_bd(PERIPH_CLK, BAUD_RATE);
 
   USART2->CR1 |= CR1_TE;
 
   USART2->CR1 |= CR1_UE;
 }
 
-void uart_write(void) {
+static void uart_write(int ch) {
   while (!(USART2->SR & SR_TXE)) {
   }
-  USART2->DR = ('A' & 0xFF);
+  USART2->DR = (ch & 0xFF);
 }

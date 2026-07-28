@@ -1,9 +1,7 @@
 #ifndef UART_H_
 #define UART_H_
+#include "stm32f411xe.h"
 
-void uart_open(void);
-void uart_close(void);
-void uart_read(void);
-void uart_write(void);
+void uart_init(void);
 
 #endif // UART_H_
