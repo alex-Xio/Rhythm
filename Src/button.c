@@ -28,6 +28,7 @@ void button_init() {
   EXTI->IMR |= EXTI_IMR_MR0_Msk;
 
   EXTI->FTSR |= EXTI_FTSR_TR0_Msk;
+  EXTI->RTSR &= ~EXTI_RTSR_TR0_Msk;
 
   NVIC_EnableIRQ(EXTI0_IRQn);
 

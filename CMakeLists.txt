@@ -33,6 +33,7 @@ target_sources(Rhythm PRIVATE
     Src/uart.c
     Src/button.c
     Src/encoder.c
+    Src/systick.c
 )
 
 # Add include directories
