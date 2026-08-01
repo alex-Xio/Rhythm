@@ -1,10 +1,11 @@
 #include "i2c.h"
 #include "stm32f411xe.h"
+#include <stdint.h>
 
-#define TRISE_16MHz = (16000000 / 1000000 + 1);
+#define TRISE_16MHz 17 // (16000000 / 1000000 + 1)
 
 static void gpio_i2c1_init() {
-  RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN_Msk;
+  RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN_Msk;
 
   // PB8 alternate
   GPIOB->MODER &= ~(1U << 16);
@@ -13,6 +14,10 @@ static void gpio_i2c1_init() {
   // PB9 alternate
   GPIOB->MODER &= ~(1U << 18);
   GPIOB->MODER |= (1U << 19);
+
+  // open-drain
+  GPIOB->OTYPER |= (1U << 8);
+  GPIOB->OTYPER |= (1U << 9);
 
   // pull-ups
   GPIOB->PUPDR |= (1U << 16);
@@ -53,4 +58,101 @@ void i2c1_init() {
   I2C1->TRISE = TRISE_16MHz;
 
   I2C1->CR1 |= (1U << 0);
+}
+
+void i2c1_read(char saddr, char maddr, unsigned int n, char *data) {
+  volatile uint32_t tmp;
+  while (I2C1->SR2 & I2C_SR2_BUSY_Msk) {
+  }
+  I2C1->CR1 |= I2C_CR1_START_Msk;
+  while (!(I2C1->SR1 & I2C_SR1_SB_Msk)) {
+  }
+  // saddr + W
+  I2C1->DR = saddr << 1;
+  while (!(I2C1->SR1 & I2C_SR1_ADDR_Msk)) {
+  }
+
+  // clear addr
+  tmp = I2C1->SR2;
+
+  while (!(I2C1->SR1 & I2C_SR1_TXE_Msk)) {
+  }
+
+  // maddr
+  I2C1->DR = maddr;
+  while (!(I2C1->SR1 & I2C_SR1_TXE_Msk)) {
+  }
+
+  I2C1->CR1 |= I2C_CR1_START_Msk;
+
+  while (!(I2C1->SR1 & I2C_SR1_SB_Msk)) {
+  }
+
+  I2C1->DR = saddr << 1 | 1;
+
+  while (!(I2C1->SR1 & (I2C_SR1_ADDR_Msk))) {
+  }
+
+  tmp = I2C1->SR2;
+
+  I2C1->CR1 |= I2C_CR1_ACK_Msk;
+
+  while (n > 0U) {
+    if (n == 1U) {
+      I2C1->CR1 &= ~I2C_CR1_ACK_Msk;
+
+      I2C1->CR1 |= I2C_CR1_STOP_Msk;
+
+      while (!(I2C1->SR1 & I2C_SR1_RXNE_Msk)) {
+      }
+
+      *data++ = I2C1->DR;
+      break;
+    } else {
+      while (!(I2C1->SR1 & I2C_SR1_RXNE_Msk)) {
+      }
+
+      (*data++) = I2C1->DR;
+
+      n--;
+    }
+  }
+}
+void i2c1_write(char saddr, char maddr, unsigned int n, char *data) {
+  volatile uint32_t tmp;
+
+  while (I2C1->SR2 & (I2C_SR2_BUSY_Msk)) {
+  }
+
+  I2C1->CR1 |= I2C_CR1_START_Msk;
+
+  while (!(I2C1->SR1 & (I2C_SR1_SB_Msk))) {
+  }
+
+  I2C1->DR = saddr << 1;
+
+  while (!(I2C1->SR1 & (I2C_SR1_ADDR_Msk))) {
+  }
+
+  // clear addr
+  tmp = I2C1->SR2;
+
+  while (!(I2C1->SR1 & (I2C_SR1_TXE_Msk))) {
+  }
+
+  I2C1->DR = maddr;
+
+  for (unsigned int i = 0; i < n; i++) {
+
+    while (!(I2C1->SR1 & (I2C_SR1_TXE_Msk))) {
+    }
+
+    I2C1->DR = *data++;
+  }
+
+  // transfer finished
+  while (!(I2C1->SR1 & (I2C_SR1_BTF_Msk))) {
+  }
+
+  I2C1->CR1 |= I2C_CR1_STOP_Msk;
 }
