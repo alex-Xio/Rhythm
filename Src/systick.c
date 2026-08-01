@@ -2,6 +2,7 @@
 #include "stm32f411xe.h"
 
 #define FIFTY_MS_LOAD 800000U
+#define HUNDRED_MS_LOAD 1600000U
 #define CTRL_CLKSRC (1U << 2)
 #define CTRL_TICKINT (1U << 1)
 #define CTRL_ENABLE (1U << 0)
@@ -16,6 +17,18 @@ void systick_init_50ms() {
   SysTick->CTRL |= CTRL_CLKSRC;
 
   SysTick->CTRL |= CTRL_TICKINT;
+
+  SysTick->CTRL |= CTRL_ENABLE;
+}
+
+void systick_init_100ms_noint() {
+  SysTick->LOAD = HUNDRED_MS_LOAD - 1U;
+
+  SysTick->VAL = 0;
+
+  SysTick->CTRL |= CTRL_CLKSRC;
+
+  SysTick->CTRL &= ~CTRL_TICKINT;
 
   SysTick->CTRL |= CTRL_ENABLE;
 }

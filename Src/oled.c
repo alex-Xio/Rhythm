@@ -1,72 +1,99 @@
 #include "oled.h"
 #include "i2c.h"
+#include "systick.h"
 #include <stdint.h>
+#include <string.h>
 
 #define SIZE 128
 #define SADDR 0x3C
-#define OLED_NORMALDISPLAY 0xA6
-#define OLED_INVERTDISPLAY 0xA7
-#define OLED_DISPLAYON 0xAF
 
-uint8_t framebuffer[(SIZE * SIZE) / 8];
+uint8_t framebuffer[16][128];
 
-static void oled_command(char c) {
-  //   char buf[2] = {0x00, c}; // Co = 0, D/C = 0
-  i2c1_write(SADDR, 0, 1, &c);
+static void oled_command(char c) { i2c1_write(SADDR, 0, 1, &c); }
+static void oled_command_ram(char c) { i2c1_write(SADDR, 0x40, 1, &c); }
+
+static void oled_command_list(char *c, uint8_t n) {
+  i2c1_write(SADDR, 0, n, c);
 }
+
+void oled_set_cursor(uint8_t page, uint8_t col) {
+  oled_command(0xb0 | (page & 0x0F));
+  oled_command(0x00 | (col & 0x0F));
+  oled_command(0x10 | ((col >> 4) & 0x0F));
+}
+static void set_pixel(uint8_t x, uint8_t y, bool color) {
+  if ((x < SIZE) && (y < SIZE)) {
+    uint8_t div = y / 8;
+    uint8_t mod = y % 8;
+    uint8_t num = (1U << mod);
+    if (color) {
+      framebuffer[div][x] |= num;
+    } else {
+      framebuffer[div][x] &= ~num;
+    }
+  }
+}
+
+void oled_display(void) {
+  for (uint8_t page = 0; page < 16; page++) {
+    oled_set_cursor(page, 0);
+    for (uint8_t col = 0; col < 128; col++) {
+      oled_command_ram(framebuffer[page][col]);
+    }
+  }
+}
+
+static char init[] = {OLED_OFF,
+                      OLED_CLKDIVSET,
+                      0xF1,
+                      OLED_PAGEADDRMODE,
+                      OLED_CONTRASTSET,
+                      0x4f,
+                      OLED_DCDC,
+                      0x8a,
+                      OLED_SEGREMAP,
+                      OLED_COMSCANDIR,
+                      OLED_DISPLAYSTARTLINE,
+                      0x00,
+                      OLED_OFFSET,
+                      0x00,
+                      OLED_PRECHARGE,
+                      0x22,
+                      OLED_VCOMDESMODESET,
+                      0x35,
+                      OLED_MPLEXRATIONSET,
+                      0x7f,
+                      OLED_ENTIREONDIS,
+                      OLED_NORMALDISPLAY
+
+};
 
 void oled_init() {
   i2c1_init();
-  oled_command(0xAE);
+  memset(framebuffer, 0, sizeof(framebuffer));
+  oled_command_list(init, sizeof(init));
 
-  oled_command(0xd5);
-  oled_command(0x51);
+  for (int i = 0; i < 128; i++) {
+    if (i % 8 == 0 || i == 127) {
+      set_pixel(0, i, true);
+    }
+  }
+  for (int i = 0; i < 128; i++) {
+    if (i % 8 == 0 || i == 127) {
+      set_pixel(i, 0, true);
+    }
+  }
+  set_pixel(64, 64, true);
+  oled_display();
 
-  oled_command(0x20);
-
-  oled_command(0x81);
-  oled_command(0x4f);
-
-  oled_command(0xad);
-  oled_command(0x8a);
-
-  oled_command(0xa0);
-
-  oled_command(0xc0);
-
-  oled_command(0xdc);
-  oled_command(0x00);
-
-  oled_command(0xd3);
-  oled_command(0x60);
-
-  oled_command(0xd9);
-  oled_command(0x22);
-
-  oled_command(0xdb);
-  oled_command(0x35);
-
-  oled_command(0xa8);
-  oled_command(0x3f);
-
-  oled_command(0xa4);
-
-  oled_command(0xa6);
-
-  // 128x128
-  oled_command(0xd3);
-  oled_command(0x00);
-  oled_command(0xa8);
-  oled_command(0x7f);
-
-  // on?
-  oled_command(0xa5);
+  oled_on();
+  systick_init_100ms_noint();
+  while (!systick_count_flag()) {
+  }
+  systick_disable();
 }
 
-// static void oled_command_list(uint8_t c, uint8_t n) {
-//   i2c1_write(SADDR, 0, n, (char *)c);
-// }
-void oled_on() { oled_command(OLED_DISPLAYON); }
+void oled_on() { oled_command(OLED_ON); }
 
 void oled_invertDisplay(bool i) {
   oled_command(i ? OLED_INVERTDISPLAY : OLED_NORMALDISPLAY);
