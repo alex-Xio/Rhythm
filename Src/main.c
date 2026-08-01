@@ -1,5 +1,6 @@
 #include "button.h"
 #include "encoder.h"
+#include "oled.h"
 #include "systick.h"
 #include "uart.h"
 #include <stdint.h>
@@ -17,6 +18,10 @@ int main(void) {
   uart_init();
   button_init();
   encoder_init();
+  oled_init();
+  oled_on();
+  // oled_invertDisplay(true);
+
   printf("Hello world\r\n");
   while (1) {
   };
