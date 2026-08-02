@@ -17,6 +17,7 @@ typedef struct {
 } Font;
 
 extern const Font font_kubasta;
+extern const Font font_icons;
 
 static inline const Char *font_find_glyph(const Font *font, char character) {
   for (uint8_t i = 0; i < font->count; i++) {

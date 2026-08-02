@@ -55,21 +55,29 @@ static void oled_setstatbar() {
 }
 
 static void oled_drawchar(const Font *font, char character, uint8_t anchor_x,
-                          uint8_t anchor_y) {
+                          uint8_t anchor_y, bool invert) {
   const Char *font_char = font_find_glyph(font, character);
   if (font_char == NULL) {
     return;
   }
   anchor_y += font_char->voffset;
   if (!is_in_bounds(anchor_x, anchor_y) ||
-      !is_in_bounds(anchor_x + font_char->width, anchor_y + font->height)) {
+      !is_in_bounds(anchor_x + font_char->width - 1,
+                    anchor_y + font->height - 1)) {
     return;
   }
   for (int i = 0; i < font->height; i++) {
     for (int j = 0; j < font_char->width; j++) {
-      if (!get_pixel(anchor_x + j, anchor_y + i)) {
-        bool color = font_char->cols[i] & (1U << (font_char->width - 1 - j));
-        set_pixel(anchor_x + j, anchor_y + i, color);
+      if (invert) {
+        if (get_pixel(anchor_x + j, anchor_y + i)) {
+          bool color = font_char->cols[i] & (1U << (font_char->width - 1 - j));
+          set_pixel(anchor_x + j, anchor_y + i, !color);
+        }
+      } else {
+        if (!get_pixel(anchor_x + j, anchor_y + i)) {
+          bool color = font_char->cols[i] & (1U << (font_char->width - 1 - j));
+          set_pixel(anchor_x + j, anchor_y + i, color);
+        }
       }
     }
   }
@@ -77,7 +85,7 @@ static void oled_drawchar(const Font *font, char character, uint8_t anchor_x,
 }
 
 static void oled_drawstr(const Font *font, char *s, uint8_t anchor_x,
-                         uint8_t anchor_y) {
+                         uint8_t anchor_y, bool invert) {
   int i = 0;
   while (s[i] != '\0') {
     const Char *font_char = font_find_glyph(font, s[i]);
@@ -85,10 +93,11 @@ static void oled_drawstr(const Font *font, char *s, uint8_t anchor_x,
       return;
     }
     if (!is_in_bounds(anchor_x, anchor_y) ||
-        !is_in_bounds(anchor_x + font_char->width, anchor_y + font->height)) {
+        !is_in_bounds(anchor_x + font_char->width - 1,
+                      anchor_y + font->height - 1)) {
       return;
     }
-    oled_drawchar(font, s[i], anchor_x, anchor_y);
+    oled_drawchar(font, s[i], anchor_x, anchor_y, invert);
     anchor_x += font_char->width + LETTER_SPACE_PX;
     i++;
   }
@@ -142,8 +151,14 @@ void oled_init() {
   }
   systick_disable();
 
-  oled_drawstr(&font_kubasta, "abcdefghijklmnop", 0, 0);
-  oled_drawstr(&font_kubasta, "qrstuvwxyz{|}~\\", 0, 20);
+  for (int i = 0; i < 9; i++) {
+    for (int j = 0; j < 9; j++) {
+      set_pixel(SIZE - 8 + j, i, true);
+    }
+  }
+  oled_drawchar(&font_icons, 'm', SIZE - 7, 0, true);
+  oled_drawstr(&font_kubasta, "abcdefghijklmnop", 0, 0, false);
+  oled_drawstr(&font_kubasta, "qrstuvwxyz{|}~\\", 0, 20, false);
   assemble_frame();
   oled_display();
 }

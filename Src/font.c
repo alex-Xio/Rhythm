@@ -1,4 +1,5 @@
 #include "font.h"
+#include <stdint.h>
 
 #define DEFAULT_HEIGHT 7
 #define SPACE_WIDTH 5
@@ -195,6 +196,9 @@ static const uint8_t c_125_cols[] = {0x0c, 0x02, 0x02, 0x01,
 static const uint8_t c_126_cols[] = {0x09, 0x15, 0x12, 0x00,
                                      0x00, 0x00, 0x00}; // '~'
 
+static const uint8_t i_cog_cols[] = {0x10, 0x1C, 0x1F, 0x36, 0x7E, 0x1C, 0x04};
+static const uint8_t i_mus_cols[] = {0x3f, 0x21, 0x21, 0x021, 0x21, 0x63, 0x63};
+
 const Char font_kubasta_chars[] = {
     {' ', SPACE_WIDTH, 0, c_32_cols}, {'!', 1, 0, c_33_cols},
     {'"', 3, 0, c_34_cols},           {'#', 5, 0, c_35_cols},
@@ -248,3 +252,8 @@ const Char font_kubasta_chars[] = {
     {'}', 4, 0, c_125_cols},          {'~', 5, 0, c_126_cols}};
 
 const Font font_kubasta = {96, DEFAULT_HEIGHT, font_kubasta_chars};
+
+const Char font_icons_chars[] = {{'c', 7, 0, i_cog_cols},
+                                 {'m', 7, 0, i_mus_cols}};
+
+const Font font_icons = {2, 8, font_icons_chars};
