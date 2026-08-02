@@ -7,6 +7,7 @@
 
 #define SIZE 128
 #define SADDR 0x3C
+#define LETTER_SPACE_PX 1
 
 uint8_t framebuffer[16][128];
 
@@ -59,20 +60,20 @@ static void oled_drawchar(const Font *font, char character, uint8_t anchor_x,
   if (font_char == NULL) {
     return;
   }
+  anchor_y += font_char->voffset;
   if (!is_in_bounds(anchor_x, anchor_y) ||
-      !is_in_bounds(anchor_x + font_char->width,
-                    anchor_y + font_char->height)) {
+      !is_in_bounds(anchor_x + font_char->width, anchor_y + font->height)) {
     return;
   }
-  for (int i = 0; i < font_char->height; i++) {
+  for (int i = 0; i < font->height; i++) {
     for (int j = 0; j < font_char->width; j++) {
       if (!get_pixel(anchor_x + j, anchor_y + i)) {
-        bool color = font_char->cols[i] & (1U << j);
+        bool color = font_char->cols[i] & (1U << (font_char->width - 1 - j));
         set_pixel(anchor_x + j, anchor_y + i, color);
       }
     }
   }
-  set_pixel(anchor_x, anchor_y, true);
+  // set_pixel(anchor_x, anchor_y, true);
 }
 
 static void oled_drawstr(const Font *font, char *s, uint8_t anchor_x,
@@ -84,12 +85,11 @@ static void oled_drawstr(const Font *font, char *s, uint8_t anchor_x,
       return;
     }
     if (!is_in_bounds(anchor_x, anchor_y) ||
-        !is_in_bounds(anchor_x + font_char->width,
-                      anchor_y + font_char->height)) {
+        !is_in_bounds(anchor_x + font_char->width, anchor_y + font->height)) {
       return;
     }
     oled_drawchar(font, s[i], anchor_x, anchor_y);
-    anchor_x += font_char->width;
+    anchor_x += font_char->width + LETTER_SPACE_PX;
     i++;
   }
 }
@@ -142,7 +142,8 @@ void oled_init() {
   }
   systick_disable();
 
-  oled_drawstr(&font_kubasta, "0 0 0", 60, 60);
+  oled_drawstr(&font_kubasta, "abcdefghijklmnop", 0, 0);
+  oled_drawstr(&font_kubasta, "qrstuvwxyz{|}~\\", 0, 20);
   assemble_frame();
   oled_display();
 }

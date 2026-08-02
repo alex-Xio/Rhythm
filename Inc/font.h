@@ -6,13 +6,13 @@
 typedef struct {
   char character;
   uint8_t width;
-  uint8_t height;
   int8_t voffset;
   const uint8_t *cols;
 } Char;
 
 typedef struct {
   uint8_t count;
+  uint8_t height;
   const Char *chars;
 } Font;
 
