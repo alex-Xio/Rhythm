@@ -1,4 +1,5 @@
 #include "oled.h"
+#include "font.h"
 #include "i2c.h"
 #include "systick.h"
 #include <stdint.h>
@@ -16,13 +17,16 @@ static void oled_command_list(char *c, uint8_t n) {
   i2c1_write(SADDR, 0, n, c);
 }
 
+static bool is_in_bounds(uint8_t x, uint8_t y) {
+  return ((x < SIZE) && (y < SIZE));
+}
 void oled_set_cursor(uint8_t page, uint8_t col) {
   oled_command(0xb0 | (page & 0x0F));
   oled_command(0x00 | (col & 0x0F));
   oled_command(0x10 | ((col >> 4) & 0x0F));
 }
 static void set_pixel(uint8_t x, uint8_t y, bool color) {
-  if ((x < SIZE) && (y < SIZE)) {
+  if (is_in_bounds(x, y)) {
     uint8_t div = y / 8;
     uint8_t mod = y % 8;
     uint8_t num = (1U << mod);
@@ -33,6 +37,64 @@ static void set_pixel(uint8_t x, uint8_t y, bool color) {
     }
   }
 }
+static bool get_pixel(uint8_t x, uint8_t y) {
+  if (!is_in_bounds(x, y)) {
+    return false;
+  }
+  uint8_t div = y / 8;
+  uint8_t mod = y % 8;
+  uint8_t num = (1U << mod);
+  return framebuffer[div][x] & num;
+}
+
+static void oled_setstatbar() {
+  for (int i = 0; i < 128; i++) {
+    set_pixel(i, 8, true);
+  }
+}
+
+static void oled_drawchar(const Font *font, char character, uint8_t anchor_x,
+                          uint8_t anchor_y) {
+  const Char *font_char = font_find_glyph(font, character);
+  if (font_char == NULL) {
+    return;
+  }
+  if (!is_in_bounds(anchor_x, anchor_y) ||
+      !is_in_bounds(anchor_x + font_char->width,
+                    anchor_y + font_char->height)) {
+    return;
+  }
+  for (int i = 0; i < font_char->height; i++) {
+    for (int j = 0; j < font_char->width; j++) {
+      if (!get_pixel(anchor_x + j, anchor_y + i)) {
+        bool color = font_char->cols[i] & (1U << j);
+        set_pixel(anchor_x + j, anchor_y + i, color);
+      }
+    }
+  }
+  set_pixel(anchor_x, anchor_y, true);
+}
+
+static void oled_drawstr(const Font *font, char *s, uint8_t anchor_x,
+                         uint8_t anchor_y) {
+  int i = 0;
+  while (s[i] != '\0') {
+    const Char *font_char = font_find_glyph(font, s[i]);
+    if (font_char == NULL) {
+      return;
+    }
+    if (!is_in_bounds(anchor_x, anchor_y) ||
+        !is_in_bounds(anchor_x + font_char->width,
+                      anchor_y + font_char->height)) {
+      return;
+    }
+    oled_drawchar(font, s[i], anchor_x, anchor_y);
+    anchor_x += font_char->width;
+    i++;
+  }
+}
+
+static void assemble_frame() { oled_setstatbar(); }
 
 void oled_display(void) {
   for (uint8_t page = 0; page < 16; page++) {
@@ -72,18 +134,6 @@ void oled_init() {
   i2c1_init();
   memset(framebuffer, 0, sizeof(framebuffer));
   oled_command_list(init, sizeof(init));
-
-  for (int i = 0; i < 128; i++) {
-    if (i % 8 == 0 || i == 127) {
-      set_pixel(0, i, true);
-    }
-  }
-  for (int i = 0; i < 128; i++) {
-    if (i % 8 == 0 || i == 127) {
-      set_pixel(i, 0, true);
-    }
-  }
-  set_pixel(64, 64, true);
   oled_display();
 
   oled_on();
@@ -91,6 +141,10 @@ void oled_init() {
   while (!systick_count_flag()) {
   }
   systick_disable();
+
+  oled_drawstr(&font_kubasta, "0 0 0", 60, 60);
+  assemble_frame();
+  oled_display();
 }
 
 void oled_on() { oled_command(OLED_ON); }
