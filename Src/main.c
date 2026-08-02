@@ -2,6 +2,7 @@
 #include "encoder.h"
 #include "oled.h"
 #include "systick.h"
+#include "tasks.h"
 #include "uart.h"
 #include <stdint.h>
 #include <stdio.h>

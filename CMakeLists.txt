@@ -37,6 +37,7 @@ target_sources(Rhythm PRIVATE
     Src/encoder.c
     Src/systick.c
     Src/font.c
+    Src/tasks.c
 )
 
 # Add include directories

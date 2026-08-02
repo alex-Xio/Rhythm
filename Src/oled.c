@@ -2,14 +2,19 @@
 #include "font.h"
 #include "i2c.h"
 #include "systick.h"
+#include "tasks.h"
 #include <stdint.h>
 #include <string.h>
 
 #define SIZE 128
 #define SADDR 0x3C
 #define LETTER_SPACE_PX 1
+#define TASK_PADDING 5
 
 uint8_t framebuffer[16][128];
+
+uint8_t tasks_offset = 0;
+uint8_t active_task_i = 0;
 
 static void oled_command(char c) { i2c1_write(SADDR, 0, 1, &c); }
 static void oled_command_ram(char c) { i2c1_write(SADDR, 0x40, 1, &c); }
@@ -46,12 +51,6 @@ static bool get_pixel(uint8_t x, uint8_t y) {
   uint8_t mod = y % 8;
   uint8_t num = (1U << mod);
   return framebuffer[div][x] & num;
-}
-
-static void oled_setstatbar() {
-  for (int i = 0; i < 128; i++) {
-    set_pixel(i, 8, true);
-  }
 }
 
 static void oled_drawchar(const Font *font, char character, uint8_t anchor_x,
@@ -102,8 +101,43 @@ static void oled_drawstr(const Font *font, char *s, uint8_t anchor_x,
     i++;
   }
 }
+static void oled_drawbox(uint8_t start_x, uint8_t start_y, uint8_t end_x,
+                         uint8_t end_y, bool color) {
+  for (int i = start_y; i < end_y; i++) {
+    for (int j = start_x; j < end_x; j++) {
+      set_pixel(j, i, color);
+    }
+  }
+}
 
-static void assemble_frame() { oled_setstatbar(); }
+static void oled_drawtask(uint8_t y_start, Task task, bool is_active) {
+  oled_drawbox(0, y_start, 128, y_start + (TASK_PADDING * 2) + 7, is_active);
+  oled_drawstr(&font_kubasta, task.name, TASK_PADDING, y_start + TASK_PADDING,
+               is_active);
+  oled_drawchar(&font_icons, '0', SIZE - 7 - TASK_PADDING,
+                y_start + TASK_PADDING, is_active);
+}
+static void oled_drawtasklist(Task *tasks, uint8_t y_start, uint8_t n,
+                              uint8_t offset) {
+  for (int i = 0; i < n; i++) {
+    oled_drawtask(y_start + TASK_PADDING, tasks[i], i == active_task_i);
+    y_start += (TASK_PADDING * 2) + 8;
+  }
+}
+
+static void oled_setstatbar() {
+  for (int i = 0; i < 128; i++) {
+    set_pixel(i, 10, true);
+  }
+  oled_drawstr(&font_kubasta, "Rhythm", 0, 0, false);
+}
+static void oled_settitle() {
+  oled_drawstr(&font_kubasta, "TODAY", 0, 16, false);
+}
+static void assemble_frame() {
+  oled_setstatbar();
+  oled_settitle();
+}
 
 void oled_display(void) {
   for (uint8_t page = 0; page < 16; page++) {
@@ -151,15 +185,8 @@ void oled_init() {
   }
   systick_disable();
 
-  for (int i = 0; i < 9; i++) {
-    for (int j = 0; j < 9; j++) {
-      set_pixel(SIZE - 8 + j, i, true);
-    }
-  }
-  oled_drawchar(&font_icons, 'm', SIZE - 7, 0, true);
-  oled_drawstr(&font_kubasta, "abcdefghijklmnop", 0, 0, false);
-  oled_drawstr(&font_kubasta, "qrstuvwxyz{|}~\\", 0, 20, false);
   assemble_frame();
+  oled_drawtasklist(get_tasks(), 20, 5, 0);
   oled_display();
 }
 

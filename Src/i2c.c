@@ -49,12 +49,17 @@ void i2c1_init() {
 
   // peripheral freq 16MHz
   I2C1->CR2 |= (1U << 4);
-  /* for 100Hz
+  /* for 100KHz
     TPCLK1 = 1/16MHz = 62.5 nanosec
     Thigh for 50% duty cycle = 1/(2*100KHz) = 5000 ns
     CCR = 5000/62.5 = 80
   */
-  I2C1->CCR = 80;
+  /* for 400KHz
+    TPCLK1 = 1/16MHz = 62.5 nanosec
+    Thigh for 50% duty cycle = 1/(2*400KHz) = 1250 ns
+    CCR = 1250/62.5 = 20
+  */
+  I2C1->CCR = 20;
   I2C1->TRISE = TRISE_16MHz;
 
   I2C1->CR1 |= (1U << 0);

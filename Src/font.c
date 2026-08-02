@@ -198,6 +198,9 @@ static const uint8_t c_126_cols[] = {0x09, 0x15, 0x12, 0x00,
 
 static const uint8_t i_cog_cols[] = {0x10, 0x1C, 0x1F, 0x36, 0x7E, 0x1C, 0x04};
 static const uint8_t i_mus_cols[] = {0x3f, 0x21, 0x21, 0x021, 0x21, 0x63, 0x63};
+static const uint8_t i_box1_cols[] = {0x7f, 0x41, 0x41, 0x41, 0x41, 0x41, 0x7f};
+static const uint8_t i_box2_cols[] = {0x7f, 0x55, 0x6b, 0x55, 0x6b, 0x55, 0x7f};
+static const uint8_t i_box3_cols[] = {0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f};
 
 const Char font_kubasta_chars[] = {
     {' ', SPACE_WIDTH, 0, c_32_cols}, {'!', 1, 0, c_33_cols},
@@ -254,6 +257,9 @@ const Char font_kubasta_chars[] = {
 const Font font_kubasta = {96, DEFAULT_HEIGHT, font_kubasta_chars};
 
 const Char font_icons_chars[] = {{'c', 7, 0, i_cog_cols},
-                                 {'m', 7, 0, i_mus_cols}};
+                                 {'m', 7, 0, i_mus_cols},
+                                 {'0', 7, 0, i_box1_cols},
+                                 {'1', 7, 0, i_box2_cols},
+                                 {'2', 7, 0, i_box3_cols}};
 
-const Font font_icons = {2, 8, font_icons_chars};
+const Font font_icons = {5, 8, font_icons_chars};

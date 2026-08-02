@@ -23,5 +23,8 @@
 void oled_init();
 void oled_on();
 void oled_invertDisplay(bool i);
+void oled_next();
+void oled_prev();
+bool oled_ready();
 
 #endif // OLED_H_
