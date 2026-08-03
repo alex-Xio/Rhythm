@@ -10,4 +10,5 @@ void oled_setstatbar();
 void oled_settitle();
 void assemble_frame();
 void render();
+void reload_tasklist();
 #endif // RENDER_H_

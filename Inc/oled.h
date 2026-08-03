@@ -37,4 +37,5 @@ void oled_drawstr(const Font *font, char *s, uint8_t anchor_x, uint8_t anchor_y,
 void oled_drawbox(uint8_t start_x, uint8_t start_y, uint8_t end_x,
                   uint8_t end_y, bool color);
 void oled_display();
+bool is_ui_dirty();
 #endif // OLED_H_

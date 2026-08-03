@@ -12,6 +12,8 @@ uint16_t dirty_pages = 0xFFFF;
 
 uint8_t tasks_offset = 0;
 
+bool is_ui_dirty() { return dirty_pages > 0; }
+
 static void oled_command(char c) { i2c1_write(SADDR, 0, 1, &c); }
 
 static void oled_command_list(char *c, uint8_t n) {
