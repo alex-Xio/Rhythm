@@ -9,4 +9,5 @@ typedef struct {
 } Task;
 
 Task *get_tasks();
+uint8_t get_active_task_i();
 #endif // TASKS_H_

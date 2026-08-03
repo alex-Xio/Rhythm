@@ -1,49 +1,41 @@
 #include "oled.h"
-#include "font.h"
 #include "i2c.h"
 #include "systick.h"
 #include "tasks.h"
-#include <stdint.h>
 #include <string.h>
 
-#define SIZE 128
 #define SADDR 0x3C
 #define LETTER_SPACE_PX 1
-#define TASK_PADDING 5
 
 uint8_t framebuffer[16][128];
+uint16_t dirty_pages = 0xFFFF;
 
 uint8_t tasks_offset = 0;
-uint8_t active_task_i = 0;
 
 static void oled_command(char c) { i2c1_write(SADDR, 0, 1, &c); }
-static void oled_command_ram(char c) { i2c1_write(SADDR, 0x40, 1, &c); }
 
 static void oled_command_list(char *c, uint8_t n) {
   i2c1_write(SADDR, 0, n, c);
 }
 
-static bool is_in_bounds(uint8_t x, uint8_t y) {
-  return ((x < SIZE) && (y < SIZE));
-}
-void oled_set_cursor(uint8_t page, uint8_t col) {
-  oled_command(0xb0 | (page & 0x0F));
-  oled_command(0x00 | (col & 0x0F));
-  oled_command(0x10 | ((col >> 4) & 0x0F));
-}
-static void set_pixel(uint8_t x, uint8_t y, bool color) {
+bool is_in_bounds(uint8_t x, uint8_t y) { return ((x < SIZE) && (y < SIZE)); }
+void set_pixel(uint8_t x, uint8_t y, bool color) {
   if (is_in_bounds(x, y)) {
     uint8_t div = y / 8;
     uint8_t mod = y % 8;
     uint8_t num = (1U << mod);
+    bool old = framebuffer[div][x];
     if (color) {
       framebuffer[div][x] |= num;
     } else {
       framebuffer[div][x] &= ~num;
     }
+    if (old != framebuffer[div][x]) {
+      dirty_pages |= (1U << div);
+    }
   }
 }
-static bool get_pixel(uint8_t x, uint8_t y) {
+bool get_pixel(uint8_t x, uint8_t y) {
   if (!is_in_bounds(x, y)) {
     return false;
   }
@@ -53,8 +45,8 @@ static bool get_pixel(uint8_t x, uint8_t y) {
   return framebuffer[div][x] & num;
 }
 
-static void oled_drawchar(const Font *font, char character, uint8_t anchor_x,
-                          uint8_t anchor_y, bool invert) {
+void oled_drawchar(const Font *font, char character, uint8_t anchor_x,
+                   uint8_t anchor_y, bool invert) {
   const Char *font_char = font_find_glyph(font, character);
   if (font_char == NULL) {
     return;
@@ -83,8 +75,8 @@ static void oled_drawchar(const Font *font, char character, uint8_t anchor_x,
   // set_pixel(anchor_x, anchor_y, true);
 }
 
-static void oled_drawstr(const Font *font, char *s, uint8_t anchor_x,
-                         uint8_t anchor_y, bool invert) {
+void oled_drawstr(const Font *font, char *s, uint8_t anchor_x, uint8_t anchor_y,
+                  bool invert) {
   int i = 0;
   while (s[i] != '\0') {
     const Char *font_char = font_find_glyph(font, s[i]);
@@ -101,8 +93,8 @@ static void oled_drawstr(const Font *font, char *s, uint8_t anchor_x,
     i++;
   }
 }
-static void oled_drawbox(uint8_t start_x, uint8_t start_y, uint8_t end_x,
-                         uint8_t end_y, bool color) {
+void oled_drawbox(uint8_t start_x, uint8_t start_y, uint8_t end_x,
+                  uint8_t end_y, bool color) {
   for (int i = start_y; i < end_y; i++) {
     for (int j = start_x; j < end_x; j++) {
       set_pixel(j, i, color);
@@ -110,42 +102,16 @@ static void oled_drawbox(uint8_t start_x, uint8_t start_y, uint8_t end_x,
   }
 }
 
-static void oled_drawtask(uint8_t y_start, Task task, bool is_active) {
-  oled_drawbox(0, y_start, 128, y_start + (TASK_PADDING * 2) + 7, is_active);
-  oled_drawstr(&font_kubasta, task.name, TASK_PADDING, y_start + TASK_PADDING,
-               is_active);
-  oled_drawchar(&font_icons, '0', SIZE - 7 - TASK_PADDING,
-                y_start + TASK_PADDING, is_active);
-}
-static void oled_drawtasklist(Task *tasks, uint8_t y_start, uint8_t n,
-                              uint8_t offset) {
-  for (int i = 0; i < n; i++) {
-    oled_drawtask(y_start + TASK_PADDING, tasks[i], i == active_task_i);
-    y_start += (TASK_PADDING * 2) + 8;
-  }
-}
-
-static void oled_setstatbar() {
-  for (int i = 0; i < 128; i++) {
-    set_pixel(i, 10, true);
-  }
-  oled_drawstr(&font_kubasta, "Rhythm", 0, 0, false);
-}
-static void oled_settitle() {
-  oled_drawstr(&font_kubasta, "TODAY", 0, 16, false);
-}
-static void assemble_frame() {
-  oled_setstatbar();
-  oled_settitle();
-}
-
 void oled_display(void) {
   for (uint8_t page = 0; page < 16; page++) {
-    oled_set_cursor(page, 0);
-    for (uint8_t col = 0; col < 128; col++) {
-      oled_command_ram(framebuffer[page][col]);
+    if (!(dirty_pages & (1U << page))) {
+      continue;
     }
+    char cmds[3] = {(char)(0xb0 | (page & 0x0F)), 0x00, 0x10};
+    oled_command_list(cmds, 3);
+    i2c1_write(SADDR, 0x40, 128, (char *)framebuffer[page]);
   }
+  dirty_pages = 0x00;
 }
 
 static char init[] = {OLED_OFF,
@@ -184,10 +150,6 @@ void oled_init() {
   while (!systick_count_flag()) {
   }
   systick_disable();
-
-  assemble_frame();
-  oled_drawtasklist(get_tasks(), 20, 5, 0);
-  oled_display();
 }
 
 void oled_on() { oled_command(OLED_ON); }

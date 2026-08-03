@@ -1,6 +1,7 @@
 #include "button.h"
 #include "encoder.h"
 #include "oled.h"
+#include "render.h"
 #include "systick.h"
 #include "tasks.h"
 #include "uart.h"
@@ -15,11 +16,14 @@ void encoder_loop(void);
 bool enc_clk_last;
 bool enc_clk_actual;
 
+int8_t encoder_change = 0;
+
 int main(void) {
   uart_init();
   button_init();
   encoder_init();
   oled_init();
+  render();
 
   printf("Hello world\r\n");
   while (1) {
@@ -27,9 +31,11 @@ int main(void) {
 }
 void encoder_loop() {
   if (encoder_dt_read() != encoder_clk_read()) {
+    encoder_change = 1;
     printf("Encoder++\r\n");
   } else {
     printf("Encoder--\r\n");
+    encoder_change = -1;
   }
 }
 
