@@ -22,10 +22,10 @@ void next_task() {
 }
 void prev_task() {
   uint8_t n = sizeof(active_tasks) / sizeof(active_tasks[0]);
-  if (task_offset > 0) {
+  if (task_offset > 0 && active_task_i == 0) {
     task_offset--;
   } else {
-    if (active_task_i != 0) {
+    if (active_task_i > 0) {
       active_task_i--;
     }
   }

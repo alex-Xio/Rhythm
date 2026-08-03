@@ -30,16 +30,20 @@ int main(void) {
   printf("Hello world\r\n");
   while (1) {
     if (encoder_change > 0) {
+      NVIC_DisableIRQ(EXTI1_IRQn);
       while (encoder_change > 0) {
         next_task();
         encoder_change--;
       }
+      NVIC_EnableIRQ(EXTI1_IRQn);
       reload_tasklist();
     } else if (encoder_change < 0) {
+      NVIC_DisableIRQ(EXTI1_IRQn);
       while (encoder_change < 0) {
         prev_task();
         encoder_change++;
       }
+      NVIC_EnableIRQ(EXTI1_IRQn);
       reload_tasklist();
     }
     if (is_ui_dirty()) {
