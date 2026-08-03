@@ -16,6 +16,7 @@ void encoder_loop(void);
 
 bool enc_clk_last;
 bool enc_clk_actual;
+bool btn_flag;
 
 int8_t encoder_change = 0;
 
@@ -45,6 +46,13 @@ int main(void) {
       }
       NVIC_EnableIRQ(EXTI1_IRQn);
       reload_tasklist();
+    }
+    if (btn_flag) {
+      NVIC_DisableIRQ(EXTI0_IRQn);
+      complete_active_task();
+      reload_tasklist();
+      btn_flag = 0;
+      NVIC_EnableIRQ(EXTI0_IRQn);
     }
     if (is_ui_dirty()) {
       NVIC_DisableIRQ(EXTI1_IRQn);
@@ -80,6 +88,7 @@ void SysTick_Handler() {
     systick_disable();
     if (button_read()) {
       printf("Button pressed\r\n");
+      btn_flag = true;
     }
   }
 }

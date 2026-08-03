@@ -11,4 +11,5 @@ void oled_settitle();
 void assemble_frame();
 void render();
 void reload_tasklist();
+void set_dirty_task(uint8_t i);
 #endif // RENDER_H_
