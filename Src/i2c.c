@@ -315,3 +315,45 @@ void i2c2_write(char saddr, char maddr, unsigned int n, char *data) {
 
   I2C2->CR1 |= I2C_CR1_STOP_Msk;
 }
+
+void i2c2_curraddr_read(char saddr, unsigned int n, char *data) {
+  volatile uint32_t tmp;
+  while (I2C2->SR2 & I2C_SR2_BUSY_Msk) {
+  }
+  I2C2->CR1 |= I2C_CR1_START_Msk;
+  while (!(I2C2->SR1 & I2C_SR1_SB_Msk)) {
+  }
+  // saddr + W
+  I2C2->DR = saddr << 1;
+  while (!(I2C2->SR1 & I2C_SR1_ADDR_Msk)) {
+  }
+
+  // clear addr
+  tmp = I2C2->SR2;
+
+  while (!(I2C2->SR1 & I2C_SR1_TXE_Msk)) {
+  }
+
+  I2C2->CR1 |= I2C_CR1_ACK_Msk;
+
+  while (n > 0U) {
+    if (n == 1U) {
+      I2C2->CR1 &= ~I2C_CR1_ACK_Msk;
+
+      I2C2->CR1 |= I2C_CR1_STOP_Msk;
+
+      while (!(I2C2->SR1 & I2C_SR1_RXNE_Msk)) {
+      }
+
+      *data++ = I2C2->DR;
+      break;
+    } else {
+      while (!(I2C2->SR1 & I2C_SR1_RXNE_Msk)) {
+      }
+
+      (*data++) = I2C2->DR;
+
+      n--;
+    }
+  }
+}

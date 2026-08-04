@@ -10,7 +10,8 @@ typedef struct {
 } Task;
 typedef struct {
   char name[MAX_NAME_SIZE];
-  uint32_t timestamp;
+  uint32_t day;
+  uint8_t count;
 } Completion;
 
 Task *get_tasks();

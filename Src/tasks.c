@@ -16,11 +16,11 @@ uint16_t completions_dirty = 0xFF;
 
 uint8_t times_completed_today(char *name) {
   uint8_t out = 0;
-  for (uint8_t i = 0; i < n_completions; i++) {
-    if (strcmp(name, completions[i].name) == 0) {
-      out++;
-    }
-  }
+  // for (uint8_t i = 0; i < n_completions; i++) {
+  //   if (strcmp(name, completions[i].name) == 0) {
+  //     out++;
+  //   }
+  // }
   return out;
 }
 void complete_active_task() {
@@ -28,9 +28,9 @@ void complete_active_task() {
   if (times_completed_today(active_task.name) >= active_task.complt) {
     return;
   } else {
-    Completion new_comp = {"", 1};
-    strcpy(new_comp.name, active_task.name);
-    completions[n_completions++] = new_comp;
+    // Completion new_comp = {"", 1};
+    // strcpy(new_comp.name, active_task.name);
+    // completions[n_completions++] = new_comp;
   }
   set_dirty_task(active_task_i);
 }
