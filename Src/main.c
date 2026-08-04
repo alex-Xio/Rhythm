@@ -27,16 +27,16 @@ int main(void) {
   button_init();
   encoder_init();
   oled_init();
+  printf("Hello world\r\n");
 
   assemble_frame();
   render();
   eeprom_init();
   eeprom_byte_write(0U, 0xAU);
   char data[2];
-  for (int i = 0; i < (1000000); i++) {
-  }
+  // for (int i = 0; i < (1000000); i++) {
+  // }
   eeprom_rand_read(0U, 2, data);
-  printf("Hello world\r\n");
   while (1) {
     if (encoder_change > 0) {
       NVIC_DisableIRQ(EXTI1_IRQn);

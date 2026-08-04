@@ -1,6 +1,7 @@
 #include "i2c.h"
 #include "stm32f411xe.h"
 #include <stdint.h>
+#include <stdio.h>
 
 #define TRISE_16MHz 6
 
@@ -323,15 +324,27 @@ void i2c2_bytewrite_16baddr(char saddr, uint16_t maddr, char data) {
 
   while (I2C2->SR2 & (I2C_SR2_BUSY_Msk)) {
   }
+  while (1) {
 
-  I2C2->CR1 |= I2C_CR1_START_Msk;
+    I2C2->CR1 |= I2C_CR1_START_Msk;
 
-  while (!(I2C2->SR1 & (I2C_SR1_SB_Msk))) {
-  }
+    while (!(I2C2->SR1 & (I2C_SR1_SB_Msk))) {
+    }
 
-  I2C2->DR = saddr << 1;
+    I2C2->DR = saddr << 1;
 
-  while (!(I2C2->SR1 & (I2C_SR1_ADDR_Msk))) {
+    while (!(I2C2->SR1 & (I2C_SR1_ADDR_Msk))) {
+    }
+    if (I2C2->SR1 & I2C_SR1_AF_Msk) {
+      I2C2->SR1 &= ~I2C_SR1_AF_Msk;
+      I2C2->CR1 |= I2C_CR1_STOP_Msk;
+      while (I2C2->CR1 & I2C_CR1_STOP_Msk) {
+      }
+      while (I2C2->SR2 & I2C_SR2_BUSY_Msk) {
+      }
+      continue;
+    }
+    break;
   }
 
   // clear addr
@@ -361,16 +374,27 @@ void i2c2_bytewrite_16baddr(char saddr, uint16_t maddr, char data) {
 
 void i2c2_read_16baddr(char saddr, uint16_t maddr, unsigned int n, char *data) {
   volatile uint32_t tmp;
-  while (I2C2->SR2 & I2C_SR2_BUSY_Msk) {
+  while (1) {
+    while (I2C2->SR2 & I2C_SR2_BUSY_Msk) {
+    }
+    I2C2->CR1 |= I2C_CR1_START_Msk;
+    while (!(I2C2->SR1 & I2C_SR1_SB_Msk)) {
+    }
+    // saddr + W
+    I2C2->DR = saddr << 1;
+    while (!(I2C2->SR1 & (I2C_SR1_ADDR_Msk | I2C_SR1_AF_Msk))) {
+    }
+    if (I2C2->SR1 & I2C_SR1_AF_Msk) {
+      I2C2->SR1 &= ~I2C_SR1_AF_Msk;
+      I2C2->CR1 |= I2C_CR1_STOP_Msk;
+      while (I2C2->CR1 & I2C_CR1_STOP_Msk) {
+      }
+      while (I2C2->SR2 & I2C_SR2_BUSY_Msk) {
+      }
+      continue;
+    }
+    break;
   }
-  I2C2->CR1 |= I2C_CR1_START_Msk;
-  while (!(I2C2->SR1 & I2C_SR1_SB_Msk)) {
-  }
-  // saddr + W
-  I2C2->DR = saddr << 1;
-  while (!(I2C2->SR1 & I2C_SR1_ADDR_Msk)) {
-  }
-
   // clear addr
   tmp = I2C2->SR2;
 
