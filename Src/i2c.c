@@ -319,7 +319,7 @@ void i2c2_write(char saddr, char maddr, unsigned int n, char *data, bool stop) {
     I2C2->CR1 |= I2C_CR1_STOP_Msk;
   }
 }
-void i2c2_bytewrite_16baddr(char saddr, uint16_t maddr, char data) {
+void i2c2_write_16baddr(char saddr, uint16_t maddr, uint8_t n, char *data) {
   volatile uint32_t tmp;
 
   while (I2C2->SR2 & (I2C_SR2_BUSY_Msk)) {
@@ -360,11 +360,13 @@ void i2c2_bytewrite_16baddr(char saddr, uint16_t maddr, char data) {
 
   I2C2->DR = (uint8_t)(maddr & 0x00FF);
 
-  while (!(I2C2->SR1 & (I2C_SR1_TXE_Msk))) {
+  for (unsigned int i = 0; i < n; i++) {
+
+    while (!(I2C2->SR1 & (I2C_SR1_TXE_Msk))) {
+    }
+
+    I2C2->DR = *data++;
   }
-
-  I2C2->DR = data;
-
   // transfer finished
   while (!(I2C2->SR1 & (I2C_SR1_BTF_Msk))) {
   }

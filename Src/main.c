@@ -32,11 +32,12 @@ int main(void) {
   assemble_frame();
   render();
   eeprom_init();
-  eeprom_byte_write(0U, 0xAU);
-  char data[2];
+  char data[3] = {0xAU, 0xBU, 0xCU};
+  eeprom_write(0U, 3, data);
+  char rdata[3];
   // for (int i = 0; i < (1000000); i++) {
   // }
-  eeprom_rand_read(0U, 2, data);
+  eeprom_rand_read(0U, 3, rdata);
   while (1) {
     if (encoder_change > 0) {
       NVIC_DisableIRQ(EXTI1_IRQn);
