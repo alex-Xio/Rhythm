@@ -1,5 +1,7 @@
 #include "button.h"
+#include "eeprom.h"
 #include "encoder.h"
+#include "i2c.h"
 #include "oled.h"
 #include "render.h"
 #include "stm32f411xe.h"
@@ -25,9 +27,15 @@ int main(void) {
   button_init();
   encoder_init();
   oled_init();
+
   assemble_frame();
   render();
-
+  eeprom_init();
+  eeprom_byte_write(0U, 0xAU);
+  char data[2];
+  for (int i = 0; i < (1000000); i++) {
+  }
+  eeprom_rand_read(0U, 2, data);
   printf("Hello world\r\n");
   while (1) {
     if (encoder_change > 0) {

@@ -2,7 +2,7 @@
 #include "stm32f411xe.h"
 #include <stdint.h>
 
-#define TRISE_16MHz 17 // (16000000 / 1000000 + 1)
+#define TRISE_16MHz 6
 
 static void gpio_i2c1_init() {
   RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN_Msk;
@@ -59,7 +59,7 @@ void i2c1_init() {
     Thigh for 50% duty cycle = 1/(2*400KHz) = 1250 ns
     CCR = 1250/62.5 = 20
   */
-  I2C1->CCR = 20;
+  I2C1->CCR = I2C_CCR_FS_Msk | 20;
   I2C1->TRISE = TRISE_16MHz;
 
   I2C1->CR1 |= (1U << 0);
@@ -189,16 +189,17 @@ static void gpio_i2c2_init() {
   GPIOB->PUPDR |= (1U << 20);
   GPIOB->PUPDR &= ~(1U << 21);
 
-  // AF9
+  // AF9 I2C2_SDA
   GPIOB->AFR[0] |= (1U << 12);
   GPIOB->AFR[0] &= ~(1U << 13);
   GPIOB->AFR[0] &= ~(1U << 14);
   GPIOB->AFR[0] |= (1U << 15);
 
-  GPIOB->AFR[1] |= (1U << 8);
+  // AF4 I2C2_SCL
+  GPIOB->AFR[1] &= ~(1U << 8);
   GPIOB->AFR[1] &= ~(1U << 9);
-  GPIOB->AFR[1] &= ~(1U << 10);
-  GPIOB->AFR[1] |= (1U << 11);
+  GPIOB->AFR[1] |= (1U << 10);
+  GPIOB->AFR[1] &= ~(1U << 11);
 }
 
 void i2c2_init() {
@@ -213,7 +214,7 @@ void i2c2_init() {
   // peripheral freq 16MHz
   I2C2->CR2 |= (1U << 4);
 
-  I2C2->CCR = 20;
+  I2C2->CCR = I2C_CCR_FS_Msk | 20;
   I2C2->TRISE = TRISE_16MHz;
 
   I2C2->CR1 |= (1U << 0);
@@ -277,7 +278,7 @@ void i2c2_read(char saddr, char maddr, unsigned int n, char *data) {
     }
   }
 }
-void i2c2_write(char saddr, char maddr, unsigned int n, char *data) {
+void i2c2_write(char saddr, char maddr, unsigned int n, char *data, bool stop) {
   volatile uint32_t tmp;
 
   while (I2C2->SR2 & (I2C_SR2_BUSY_Msk)) {
@@ -313,10 +314,52 @@ void i2c2_write(char saddr, char maddr, unsigned int n, char *data) {
   while (!(I2C2->SR1 & (I2C_SR1_BTF_Msk))) {
   }
 
+  if (stop) {
+    I2C2->CR1 |= I2C_CR1_STOP_Msk;
+  }
+}
+void i2c2_bytewrite_16baddr(char saddr, uint16_t maddr, char data) {
+  volatile uint32_t tmp;
+
+  while (I2C2->SR2 & (I2C_SR2_BUSY_Msk)) {
+  }
+
+  I2C2->CR1 |= I2C_CR1_START_Msk;
+
+  while (!(I2C2->SR1 & (I2C_SR1_SB_Msk))) {
+  }
+
+  I2C2->DR = saddr << 1;
+
+  while (!(I2C2->SR1 & (I2C_SR1_ADDR_Msk))) {
+  }
+
+  // clear addr
+  tmp = I2C2->SR2;
+
+  while (!(I2C2->SR1 & (I2C_SR1_TXE_Msk))) {
+  }
+
+  I2C2->DR = (maddr << 8);
+
+  while (!(I2C2->SR1 & (I2C_SR1_TXE_Msk))) {
+  }
+
+  I2C2->DR = (uint8_t)(maddr & 0x00FF);
+
+  while (!(I2C2->SR1 & (I2C_SR1_TXE_Msk))) {
+  }
+
+  I2C2->DR = data;
+
+  // transfer finished
+  while (!(I2C2->SR1 & (I2C_SR1_BTF_Msk))) {
+  }
+
   I2C2->CR1 |= I2C_CR1_STOP_Msk;
 }
 
-void i2c2_curraddr_read(char saddr, unsigned int n, char *data) {
+void i2c2_read_16baddr(char saddr, uint16_t maddr, unsigned int n, char *data) {
   volatile uint32_t tmp;
   while (I2C2->SR2 & I2C_SR2_BUSY_Msk) {
   }
@@ -333,6 +376,27 @@ void i2c2_curraddr_read(char saddr, unsigned int n, char *data) {
 
   while (!(I2C2->SR1 & I2C_SR1_TXE_Msk)) {
   }
+
+  // maddr
+  I2C2->DR = (uint8_t)(maddr >> 8);
+  while (!(I2C2->SR1 & I2C_SR1_TXE_Msk)) {
+  }
+
+  I2C2->DR = (uint8_t)(maddr & 0x00FF);
+  while (!(I2C2->SR1 & I2C_SR1_TXE_Msk)) {
+  }
+
+  I2C2->CR1 |= I2C_CR1_START_Msk;
+
+  while (!(I2C2->SR1 & I2C_SR1_SB_Msk)) {
+  }
+
+  I2C2->DR = saddr << 1 | 1;
+
+  while (!(I2C2->SR1 & (I2C_SR1_ADDR_Msk))) {
+  }
+
+  tmp = I2C2->SR2;
 
   I2C2->CR1 |= I2C_CR1_ACK_Msk;
 
