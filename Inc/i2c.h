@@ -1,7 +1,7 @@
 #ifndef I2C_H_
 #define I2C_H_
 
-#include "stm32f411xe.h"
+#include "stm32f4xx.h"
 #include <stdbool.h>
 
 void i2c1_init();

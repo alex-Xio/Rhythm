@@ -1,5 +1,5 @@
 #include "i2c.h"
-#include "stm32f411xe.h"
+#include "stm32f4xx.h"
 #include <stdint.h>
 #include <stdio.h>
 

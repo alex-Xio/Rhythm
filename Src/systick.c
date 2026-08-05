@@ -1,5 +1,5 @@
 #include "systick.h"
-#include "stm32f411xe.h"
+#include "stm32f4xx.h"
 
 #define FIFTY_MS_LOAD 800000U
 #define HUNDRED_MS_LOAD 1600000U

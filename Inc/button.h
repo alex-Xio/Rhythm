@@ -1,6 +1,6 @@
 #ifndef BUTTON_H_
 #define BUTTON_H_
-#include "stm32f411xe.h"
+#include "stm32f4xx.h"
 #include <stdbool.h>
 
 void button_init(void);
