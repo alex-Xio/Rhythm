@@ -34,7 +34,7 @@ void oled_drawtask(uint8_t y_start, Task task, bool is_active) {
 
 bool draw_no_tasks() {
   if (get_task_cnt() == 0) {
-    oled_drawstr(&font_kubasta, "No Tasks Uploaded Yet", TASK_PADDING,
+    oled_drawstr(&font_kubasta, "No Tasks Uploaded", TASK_PADDING,
                  SIZE / 2 - (font_kubasta.height / 2), false);
     dirty_tasks = 0xFF;
     return true;

@@ -27,9 +27,9 @@ void init() {
   button_init();
   encoder_init();
   oled_init();
-  printf("Hello world\r\n");
   eeprom_init();
   tasks_init();
+  printf("Hello world\r\n");
 }
 
 int main(void) {
