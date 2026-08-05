@@ -33,19 +33,20 @@ void init() {
 }
 
 int main(void) {
-  // Tasklist tsks = {8,
-  //                  {{"1 Test", 1},
-  //                   {"2 Completions", 2},
-  //                   {"3 Completions", 3},
-  //                   {"test17characters_", 4},
-  //                   {"Test 5", 5},
-  //                   {"Test 6", 6},
-  //                   {"Test 7", 2},
-  //                   {"Test 8", 2}}};
-
+  // eeprom_init();
+  // TaskList tsks = {8,
+  //                  {{"1 Test", 1, 1},
+  //                   {"2 Completions", 2, 2},
+  //                   {"3 Completions", 3, 3},
+  //                   {"test17characters_", 4, 4},
+  //                   {"Test 5", 5, 1},
+  //                   {"Test 6", 6, 2},
+  //                   {"Test 7", 7, 3},
+  //                   {"Test 8", 8, 4}}};
   // char data[0x7FFFU];
   // memset(data, 0xFF, sizeof(data));
   // eeprom_write(EEPROM_HEADER_ADDR, sizeof(data), data);
+  // eeprom_write(EEPROM_TASKS_ADDR, sizeof(TaskList), (char *)&tsks);
   // for (int i = 0; i < 500000; i++) {
   // }
   init();
@@ -78,7 +79,16 @@ int main(void) {
     }
     if (is_ui_dirty()) {
       NVIC_DisableIRQ(EXTI1_IRQn);
+      NVIC_DisableIRQ(EXTI0_IRQn);
       render();
+      NVIC_EnableIRQ(EXTI0_IRQn);
+      NVIC_EnableIRQ(EXTI1_IRQn);
+    }
+    if (is_record_dirty()) {
+      NVIC_DisableIRQ(EXTI1_IRQn);
+      NVIC_DisableIRQ(EXTI0_IRQn);
+      update_record();
+      NVIC_EnableIRQ(EXTI0_IRQn);
       NVIC_EnableIRQ(EXTI1_IRQn);
     }
   };

@@ -19,7 +19,7 @@ void oled_drawtask(uint8_t y_start, Task task, bool is_active) {
   oled_drawbox(0, y_start, 128, y_start + (TASK_PADDING * 2) + 7, is_active);
   oled_drawstr(&font_kubasta, task.name, TASK_PADDING, y_start + TASK_PADDING,
                is_active);
-  uint16_t times_completed = times_completed_today(task.name);
+  uint16_t times_completed = times_completed_today(task.id);
   char c = '0';
   if (times_completed == 0) {
     c = '0';

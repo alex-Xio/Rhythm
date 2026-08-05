@@ -1,5 +1,6 @@
 #ifndef TASKS_H_
 #define TASKS_H_
+#include <stdbool.h>
 #include <stdint.h>
 
 #define MAX_NAME_SIZE 17
@@ -18,8 +19,12 @@ typedef struct {
 } TaskList;
 typedef struct {
   uint32_t date;      // BCD
-  uint16_t completed; // 2y: 2y+1 bits are for completions (10 -> 2 etc.)
+  uint64_t completed; // 2y: 2y+1 bits are for completions (10 -> 2 etc.)
 } DayRecord;
+
+bool is_record_dirty();
+void update_record();
+
 void tasks_init();
 TaskList get_tasklist();
 uint8_t get_task_cnt();
@@ -28,6 +33,6 @@ uint8_t get_active_task_i();
 uint8_t get_task_offset();
 void next_task();
 void prev_task();
-uint8_t times_completed_today(char *name);
+uint8_t times_completed_today(uint8_t id);
 void complete_active_task();
 #endif // TASKS_H_
