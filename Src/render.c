@@ -32,11 +32,22 @@ void oled_drawtask(uint8_t y_start, Task task, bool is_active) {
                 y_start + 2, is_active);
 }
 
-void oled_drawtasklist(Task *tasks, uint8_t y_start, uint8_t n,
+bool draw_no_tasks() {
+  if (get_task_cnt() == 0) {
+    oled_drawstr(&font_kubasta, "No Tasks", TASK_PADDING,
+                 SIZE / 2 - (font_kubasta.height / 2), false);
+    dirty_tasks = 0xFF;
+    return true;
+  }
+  return false;
+}
+
+void oled_drawtasklist(Tasklist tasks, uint8_t y_start, uint8_t n,
                        uint8_t offset) {
   for (int i = 0; i < n; i++) {
     if (dirty_tasks & (1U << i)) {
-      oled_drawtask(y_start, tasks[i], i == get_active_task_i());
+      oled_drawtask(y_start, tasks.tasks[i + get_task_offset()],
+                    i == get_active_task_i());
       dirty_tasks &= ~(1U << i);
     }
     y_start += (TASK_PADDING * 2) + 8;
@@ -48,6 +59,9 @@ void oled_setstatbar() {
 }
 void oled_settitle() { oled_drawstr(&font_kubasta, "TODAY", 0, 17, false); }
 void reload_tasklist() {
+  if (draw_no_tasks()) {
+    return;
+  }
   if (last_active_task_i != get_active_task_i()) {
     dirty_tasks |= (1U << last_active_task_i);
     dirty_tasks |= (1U << get_active_task_i());
@@ -57,11 +71,13 @@ void reload_tasklist() {
     dirty_tasks = 0xFF;
     last_task_offset = get_task_offset();
   }
-  oled_drawtasklist(get_tasks(), 27, TASKS_FIT, get_task_offset());
+  oled_drawtasklist(get_tasklist(), 27, TASKS_FIT, get_task_offset());
 }
 void assemble_frame() {
   oled_setstatbar();
   oled_settitle();
-  reload_tasklist();
+  if (!draw_no_tasks()) {
+    reload_tasklist();
+  }
 }
 void render() { oled_display(); }

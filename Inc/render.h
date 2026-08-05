@@ -5,7 +5,8 @@
 #include <stdint.h>
 
 void oled_drawtask(uint8_t y_start, Task task, bool is_active);
-void oled_drawtasklist(Task *tasks, uint8_t y_start, uint8_t n, uint8_t offset);
+void oled_drawtasklist(Tasklist tasks, uint8_t y_start, uint8_t n,
+                       uint8_t offset);
 void oled_setstatbar();
 void oled_settitle();
 void assemble_frame();

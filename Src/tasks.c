@@ -1,16 +1,30 @@
 #include "tasks.h"
+#include "eeprom.h"
 #include "render.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#define MAX_COMPLETIONS 64
 uint8_t active_task_i = 5;
 uint8_t task_offset = 0;
-Task active_tasks[] = {{"1 Completion", 1},  {"2 Completions", 2},
-                       {"3 Completions", 3}, {"!@#$%^&*()", 2},
-                       {"Test 5", 2},        {"Test 6", 2},
-                       {"Test 7", 2},        {"Test 8", 2}};
+Tasklist active_tasks;
+// Task active_tasks[] = {{"1 Completion", 1},  {"2 Completions", 2},
+//                        {"3 Completions", 3}, {"!@#$%^&*()", 2},
+//                        {"Test 5", 2},        {"Test 6", 2},
+//                        {"Test 7", 2},        {"Test 8", 2}};
 
+void tasks_init() {
+  char cnt;
+  eeprom_rand_read(EEPROM_TASKS_ADDR, 1, &cnt);
+  if (cnt == 0xFFU) {
+    memset(&active_tasks, 0, sizeof(active_tasks));
+    return;
+  }
+  // uint16_t tsize = 1 + sizeof(Task) * cnt;
+  uint16_t tsize = sizeof(Tasklist);
+  char data[tsize];
+  eeprom_rand_read(EEPROM_TASKS_ADDR, tsize, data);
+  active_tasks = *(Tasklist *)data;
+}
 Completion completions[MAX_COMPLETIONS];
 uint16_t n_completions = 1;
 uint16_t completions_dirty = 0xFF;
@@ -18,7 +32,7 @@ uint16_t completions_dirty = 0xFF;
 uint8_t times_completed_today(char *name) {
   uint8_t out = 0;
   // TODO: actual completion logic
-  out = rand() % 3;
+  out = 1;
   // for (uint8_t i = 0; i < n_completions; i++) {
   //   if (strcmp(name, completions[i].name) == 0) {
   //     out++;
@@ -27,7 +41,7 @@ uint8_t times_completed_today(char *name) {
   return out;
 }
 void complete_active_task() {
-  Task active_task = active_tasks[active_task_i + task_offset];
+  Task active_task = active_tasks.tasks[active_task_i + task_offset];
   if (times_completed_today(active_task.name) >= active_task.complt) {
     return;
   } else {
@@ -40,9 +54,10 @@ void complete_active_task() {
 
 uint8_t get_active_task_i() { return active_task_i; }
 uint8_t get_task_offset() { return task_offset; }
+uint8_t get_task_cnt() { return active_tasks.task_cnt; }
 
 void next_task() {
-  uint8_t n = sizeof(active_tasks) / sizeof(active_tasks[0]);
+  uint8_t n = active_tasks.task_cnt;
   if (active_task_i + 1 + task_offset >= n) {
     return;
   }
@@ -62,4 +77,4 @@ void prev_task() {
   }
 }
 
-Task *get_tasks() { return &active_tasks[task_offset]; }
+Tasklist get_tasklist() { return active_tasks; }

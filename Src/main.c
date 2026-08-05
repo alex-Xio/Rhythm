@@ -29,6 +29,18 @@ int main(void) {
   oled_init();
   printf("Hello world\r\n");
   eeprom_init();
+  // Tasklist tsks = {8,
+  //                  {{"1 Test", 1},
+  //                   {"2 Completions", 2},
+  //                   {"3 Completions", 3},
+  //                   {"Test 4", 2},
+  //                   {"Test 5", 2},
+  //                   {"Test 6", 2},
+  //                   {"Test 7", 2},
+  //                   {"Test 8", 2}}};
+
+  // eeprom_write(EEPROM_TASKS_ADDR, sizeof(Tasklist), (char *)&tsks);
+  tasks_init();
   assemble_frame();
   render();
   while (1) {

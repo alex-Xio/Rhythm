@@ -4,17 +4,26 @@
 
 #define MAX_NAME_SIZE 22
 #define TASKS_FIT 6
+#define MAX_TASKS_COUNT 20
+#define MAX_COMPLETIONS 64
+typedef char Name[MAX_NAME_SIZE];
 typedef struct {
-  char name[MAX_NAME_SIZE];
+  Name name;
   uint8_t complt;
 } Task;
 typedef struct {
-  char name[MAX_NAME_SIZE];
+  uint8_t task_cnt;
+  Task tasks[MAX_TASKS_COUNT];
+} Tasklist;
+typedef struct {
+  Name name;
   uint32_t day;
   uint8_t count;
 } Completion;
 
-Task *get_tasks();
+void tasks_init();
+Tasklist get_tasklist();
+uint8_t get_task_cnt();
 Completion *get_completions();
 uint8_t get_active_task_i();
 uint8_t get_task_offset();

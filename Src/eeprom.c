@@ -9,7 +9,7 @@ uint32_t curr_date = 0x00050826; // TODO: change to actual rtc date
 static void init_header() {
   const uint32_t dummy_date = 0x00050826; // TODO: change to actual rtc date
   const Header new_header = {dummy_date, EEPROM_START_ADDR, EEPROM_START_ADDR,
-                             EEPROM_TASKS_COUNT};
+                             MAX_TASKS_COUNT};
   eeprom_write(EEPROM_HEADER_ADDR, sizeof(new_header), (char *)&new_header);
 }
 void eeprom_init() {
@@ -29,9 +29,15 @@ void eeprom_init() {
 void eeprom_rand_read(uint16_t addr, uint16_t n, char *data) {
   i2c2_read_16baddr(EEPROM_ADDR, addr, n, data);
 }
-void eeprom_write(uint16_t addr, uint8_t n, char *data) {
-  if (n > 64) {
-    return;
+void eeprom_write(uint16_t addr, uint16_t n, char *data) {
+  while (n > 0) {
+    uint16_t page_remaining = 64 - (addr & 0x3F);
+    uint16_t chunk = (n < page_remaining) ? n : page_remaining;
+
+    i2c2_write_16baddr(EEPROM_ADDR, addr, chunk, data);
+
+    addr += chunk;
+    data += chunk;
+    n -= chunk;
   }
-  i2c2_write_16baddr(EEPROM_ADDR, addr, n, data);
 }
