@@ -9,7 +9,7 @@ uint32_t curr_date = 0x00050826; // TODO: change to actual rtc date
 static void init_header() {
   const uint32_t dummy_date = 0x00050826; // TODO: change to actual rtc date
   const Header new_header = {dummy_date, EEPROM_START_ADDR, EEPROM_START_ADDR,
-                             MAX_TASKS_COUNT};
+                             0, false};
   eeprom_write(EEPROM_HEADER_ADDR, sizeof(new_header), (char *)&new_header);
 }
 void eeprom_init() {

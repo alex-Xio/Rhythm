@@ -10,6 +10,7 @@
 #include "uart.h"
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 #define LINE0 (1U << 0)
 #define LINE1 (1U << 1)
@@ -21,26 +22,33 @@ bool enc_clk_actual;
 bool btn_flag;
 
 int8_t encoder_change = 0;
-
-int main(void) {
+void init() {
   uart_init();
   button_init();
   encoder_init();
   oled_init();
   printf("Hello world\r\n");
   eeprom_init();
+  tasks_init();
+}
+
+int main(void) {
   // Tasklist tsks = {8,
   //                  {{"1 Test", 1},
   //                   {"2 Completions", 2},
   //                   {"3 Completions", 3},
-  //                   {"Test 4", 2},
-  //                   {"Test 5", 2},
-  //                   {"Test 6", 2},
+  //                   {"test17characters_", 4},
+  //                   {"Test 5", 5},
+  //                   {"Test 6", 6},
   //                   {"Test 7", 2},
   //                   {"Test 8", 2}}};
 
-  // eeprom_write(EEPROM_TASKS_ADDR, sizeof(Tasklist), (char *)&tsks);
-  tasks_init();
+  // char data[0x7FFFU];
+  // memset(data, 0xFF, sizeof(data));
+  // eeprom_write(EEPROM_HEADER_ADDR, sizeof(data), data);
+  // for (int i = 0; i < 500000; i++) {
+  // }
+  init();
   assemble_frame();
   render();
   while (1) {
