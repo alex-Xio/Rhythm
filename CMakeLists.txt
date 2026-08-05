@@ -40,6 +40,7 @@ target_sources(Rhythm PRIVATE
     Src/tasks.c
     Src/render.c
     Src/eeprom.c
+    Src/rtc.c
 )
 
 # Add include directories
