@@ -1,9 +1,20 @@
 #ifndef EEPROM_H_
 #define EEPROM_H_
+#include "tasks.h"
 #include <stdint.h>
 
-// eeprom address needs to be << 1 with r/w bit
 #define EEPROM_ADDR 0x50
+#define EEPROM_HEADER_ADDR 0x00U
+#define EEPROM_START_ADDR (0x00U + sizeof(Header))
+#define EEPROM_TASKS_COUNT 20
+#define EEPROM_TASKS_ADDR (0x8000U - (sizeof(Task) * EEPROM_TASKS_COUNT))
+
+typedef struct {
+  uint32_t date_bcd;
+  uint16_t today_addr;
+  uint16_t last_addr;
+  uint8_t task_cnt;
+} Header;
 
 void eeprom_init();
 void eeprom_page_write(uint16_t addr, uint64_t page);
