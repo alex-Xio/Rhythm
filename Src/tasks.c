@@ -1,6 +1,7 @@
 #include "tasks.h"
 #include "render.h"
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 #define MAX_COMPLETIONS 64
 uint8_t active_task_i = 5;
@@ -16,6 +17,8 @@ uint16_t completions_dirty = 0xFF;
 
 uint8_t times_completed_today(char *name) {
   uint8_t out = 0;
+  // TODO: actual completion logic
+  out = rand() % 3;
   // for (uint8_t i = 0; i < n_completions; i++) {
   //   if (strcmp(name, completions[i].name) == 0) {
   //     out++;

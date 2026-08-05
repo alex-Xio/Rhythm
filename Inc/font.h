@@ -7,7 +7,7 @@ typedef struct {
   char character;
   uint8_t width;
   int8_t voffset;
-  const uint8_t *cols;
+  const uint16_t *cols;
 } Char;
 
 typedef struct {

@@ -1,4 +1,5 @@
 #include "render.h"
+#include "font.h"
 #include "oled.h"
 #include "tasks.h"
 #include <stdint.h>
@@ -27,8 +28,8 @@ void oled_drawtask(uint8_t y_start, Task task, bool is_active) {
   } else {
     c = '2';
   }
-  oled_drawchar(&font_icons, c, SIZE - 7 - TASK_PADDING, y_start + TASK_PADDING,
-                is_active);
+  oled_drawchar(&font_icons, c, SIZE - font_icons.height - TASK_PADDING,
+                y_start + 2, is_active);
 }
 
 void oled_drawtasklist(Task *tasks, uint8_t y_start, uint8_t n,

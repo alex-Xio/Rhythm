@@ -4,10 +4,10 @@
 #include <stdio.h>
 
 Header eeprom_header;
-uint32_t curr_date = 0x00050826;
+uint32_t curr_date = 0x00050826; // TODO: change to actual rtc date
 
 static void init_header() {
-  const uint32_t dummy_date = 0x00050826;
+  const uint32_t dummy_date = 0x00050826; // TODO: change to actual rtc date
   const Header new_header = {dummy_date, EEPROM_START_ADDR, EEPROM_START_ADDR,
                              EEPROM_TASKS_COUNT};
   eeprom_write(EEPROM_HEADER_ADDR, sizeof(new_header), (char *)&new_header);
