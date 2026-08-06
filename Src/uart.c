@@ -8,7 +8,7 @@
 #define SR_TXE (1U << 7)
 #define PERIPH_CLK 16000000
 #define BAUD_RATE 115200
-// #define DEBUG_UART
+#define DEBUG_UART
 
 static uint16_t compute_uart_bd(uint32_t periph_clk, uint32_t baudrate) {
   return ((periph_clk + (baudrate / 2U)) / baudrate);

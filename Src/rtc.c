@@ -8,7 +8,7 @@
 #define RTC_SYNCH_PREDIV ((uint32_t)0x00F9)
 #define RTC_INIT_Msk 0xFFFFFFFFU
 
-static void test_datetime() {
+void test_datetime() {
   register uint32_t dt = 0;
   // year
   dt |= (0x26U << 16);
@@ -48,6 +48,7 @@ void rtc_init() {
   // backup power
   PWR->CR |= PWR_CR_DBP_Msk;
 
+  // TODO: Change to LSE
   RCC->CSR |= RCC_CSR_LSION_Msk;
   while (!(RCC->CSR & RCC_CSR_LSIRDY_Msk)) {
   }
@@ -66,7 +67,7 @@ void rtc_init() {
   RTC->WPR = (uint8_t)0x53U;
 
   RTC->ISR = RTC_INIT_Msk;
-  while (((RTC->ISR & RTC_ISR_INITF_Msk) == RTC_ISR_INITF_Msk)) {
+  while (!(RTC->ISR & RTC_ISR_INITF_Msk)) {
   }
 
   test_datetime();
@@ -85,3 +86,8 @@ void rtc_init() {
   RTC->WPR = 0xFF;
   rtc_set_header();
 }
+
+uint8_t rtc_get_dt() { return (uint8_t)((RTC->DR >> 4) & 0x3); }
+uint8_t rtc_get_du() { return (uint8_t)(RTC->DR & 0xF); }
+uint8_t rtc_get_mt() { return (uint8_t)((RTC->DR >> 12) & 0x1); }
+uint8_t rtc_get_mu() { return (uint8_t)((RTC->DR >> 8) & 0xF); }

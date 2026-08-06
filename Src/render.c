@@ -1,8 +1,12 @@
 #include "render.h"
+#include "eeprom.h"
 #include "font.h"
 #include "oled.h"
+#include "rtc.h"
 #include "tasks.h"
 #include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 #define TASK_PADDING 4
 uint8_t dirty_tasks = 0xFF;
 uint8_t last_active_task_i = 0;
@@ -56,6 +60,16 @@ void oled_drawtasklist(TaskList tasks, uint8_t y_start, uint8_t n,
 void oled_setstatbar() {
   oled_drawhline(10, true);
   oled_drawstr(&font_kubasta, "Rhythm", 0, 0, false);
+  if (get_header().time_set) {
+    char str[6];
+    str[0] = '0' + rtc_get_dt();
+    str[1] = '0' + rtc_get_du();
+    str[2] = '.';
+    str[3] = '0' + rtc_get_mt();
+    str[4] = '0' + rtc_get_mu();
+    str[5] = '\0';
+    oled_drawstr(&font_kubasta, str, SIZE - 31 - TASK_PADDING, 0, false);
+  }
 }
 void oled_settitle() { oled_drawstr(&font_kubasta, "TODAY", 0, 17, false); }
 void reload_tasklist() {

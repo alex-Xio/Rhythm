@@ -28,12 +28,13 @@ void init() {
   encoder_init();
   oled_init();
   eeprom_init();
-  tasks_init();
   rtc_init();
+  tasks_init();
   printf("Hello world\r\n");
 }
 
 int main(void) {
+
   // eeprom_init();
   // TaskList tsks = {8,
   //                  {{"1 Test", 1, 1},

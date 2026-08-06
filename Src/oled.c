@@ -80,7 +80,7 @@ void oled_drawchar(const Font *font, char character, uint8_t anchor_x,
 void oled_drawstr(const Font *font, char *s, uint8_t anchor_x, uint8_t anchor_y,
                   bool invert) {
   int i = 0;
-  while (s[i] != '\0') {
+  while (s[i] != 0) {
     const Char *font_char = font_find_glyph(font, s[i]);
     if (font_char == NULL) {
       return;
