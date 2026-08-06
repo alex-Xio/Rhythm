@@ -68,7 +68,7 @@ void oled_setstatbar() {
     str[3] = '0' + rtc_get_mt();
     str[4] = '0' + rtc_get_mu();
     str[5] = '\0';
-    oled_drawstr(&font_kubasta, str, SIZE - 31 - TASK_PADDING, 0, false);
+    oled_drawstr(&font_kubasta, str, SIZE - 22 - TASK_PADDING, 0, false);
   }
 }
 void oled_settitle() { oled_drawstr(&font_kubasta, "TODAY", 0, 17, false); }
